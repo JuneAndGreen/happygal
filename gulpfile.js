@@ -4,6 +4,7 @@ const gulp = require('gulp');
 const webpack = require('gulp-webpack');
 const webpackConfig = require('./webpack.config.js');
 const uglify = require('gulp-uglify');
+const Hala = require('hala');
 
 gulp.task('webpack', () => {
   gulp.src('./src/*.js')
@@ -22,11 +23,16 @@ gulp.task('html', ['uglify'], () => {
     .pipe(gulp.dest('./dist/'));
 });
 
-gulp.task('default', () => {
-  gulp.watch('./src/**/*.*', (event) => {
-    console.log('******** rebuild ********');
-    gulp.run('html');
-  });
-
-	gulp.run('html');
+gulp.task('watch', () => {
+  gulp.watch('./src/**/*.*', ['html']);
 });
+
+gulp.task('server', ['watch', 'html'], () => {
+  new Hala({
+    port: 8088,
+    launch: true,
+    webroot: './'
+  });
+});
+
+gulp.task('default', ['server']);
