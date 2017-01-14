@@ -7,7 +7,7 @@ import html from './index.html';
 /**
  * 角色类
  */
-export default class Person extends Base {
+export default class Character extends Base {
   constructor(options) {
     super(options);
 

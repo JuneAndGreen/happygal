@@ -3,7 +3,7 @@
 import Base from '../base';
 import './index.less';
 import html from './index.html';
-import Person from '../person';
+import Character from '../character';
 
 /**
  * 帧类
@@ -25,10 +25,10 @@ export default class Frame extends Base {
    * 初始化
    */
   init() {
-    let people = this.options.people || [];
+    let characters = this.options.characters || [];
 
-    people.forEach((person) => {
-      this.add(new Person(person));
+    characters.forEach((character) => {
+      this.add(new Character(character));
     });
   }
 
@@ -37,8 +37,8 @@ export default class Frame extends Base {
    */
   render() {
     let dialogue = this.options.dialogue || '';
-    let content = this.datas.map((person) => {
-      return person.render();
+    let content = this.datas.map((character) => {
+      return character.render();
     });
     content = content.join('');
 
