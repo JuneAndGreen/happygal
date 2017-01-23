@@ -13,7 +13,7 @@ module.exports = {
 	    {test: /\.js$/, loader: 'babel', query: {presets: 'es2015'}},
       {test: /\.less$/, loaders: ['style', 'css', 'less']},
       {test: /\.(png|jpg)$/, loader: 'url', query: {limit: 1024, name: '[hash].[ext]'}},
-      {test: /\.html$/, loader: 'raw', exclude: /main/}
+      {test: /\.html$/, loader: 'raw', exclude: /main.html/}
 	  ]
 	},
   resolve: {

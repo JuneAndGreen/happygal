@@ -1,17 +1,15 @@
 'use strict';
 
-import Base from '../base';
+import ExtraBase from '../extrabase';
 import './index.less';
 import html from './index.html';
 
 /**
- * 角色类
+ * 背景类
  */
-export default class Character extends Base {
+export default class Dialogue extends ExtraBase {
   constructor(options) {
     super(options);
-
-    this.type = options.type || 0; // 立绘编号
 
     this.id = super.seed();
     this.options = options || {};
@@ -23,23 +21,20 @@ export default class Character extends Base {
    * 初始化
    */
   init() {
-  
-  }
-
-  /**
-   * 销毁
-   */
-  destroy() {
-
+    this.dialogue = this.options.dialogue || '';
   }
 
   /**
    * 渲染
    */
   render() {
+    // 渲染背景
+    let dialogue = this.dialogue;
+
     let render = super.parse(html);
     return render({
-      id: this.id
+      id: this.id,
+      dialogue
     });
   }
 }

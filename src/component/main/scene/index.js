@@ -1,14 +1,15 @@
 'use strict';
 
-import Base from '../base';
+import MainBase from '../mainbase';
 import './index.less';
 import html from './index.html';
 import Frame from '../frame';
+import Bg from '../../extra/bg';
 
 /**
  * 场景类
  */
-export default class Scene extends Base {
+export default class Scene extends MainBase {
   constructor(options) {
     super(options);
 
@@ -38,6 +39,10 @@ export default class Scene extends Base {
     frames.forEach((frame) => {
       this.add(new Frame(frame));
     });
+
+    // 背景
+    let bg = this.options.bg || '';
+    this.bg = new Bg({bg});
   }
 
   /**
@@ -53,12 +58,16 @@ export default class Scene extends Base {
    * 渲染
    */
   render() {
-    let bg = this.options.bg || '';
+    // 渲染帧列表
     let content = this.datas.map((frame) => {
       return frame.render();
     });
     content = content.join('');
 
+    // 渲染背景
+    let bg = this.bg.render();
+
+    // 渲染场景
     let render = super.parse(html);
     return render({
       id: this.id,

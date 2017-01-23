@@ -1,7 +1,7 @@
 'use strict';
 
 import './main.less';
-import Game from './component/game';
+import Game from './component/main/game';
 
 let game = new Game(window.data);
 

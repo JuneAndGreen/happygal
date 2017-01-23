@@ -1,21 +1,21 @@
 'use strict';
 
-import Base from '../base';
+import MainBase from '../mainbase';
 import './index.less';
 import html from './index.html';
-import Section from '../section';
+import Scene from '../scene';
 
 /**
- * 游戏类
+ * 片段类
  */
-export default class Game extends Base {
+export default class Section extends MainBase {
   constructor(options) {
     super(options);
 
-    // 片段数组
+    // 场景数组
     this.datas = [];
 
-    // 当前所在片段
+    // 当前所在场景
     this.nowIndex = 0;
 
     this.id = super.seed();
@@ -28,35 +28,35 @@ export default class Game extends Base {
    * 初始化
    */
   init() {
-    let sections = this.options.sections || [];
+    let scenes = this.options.scenes || [];
 
-    sections.forEach((section) => {
-      this.add(new Section(section));
+    scenes.forEach((scene) => {
+      this.add(new Scene(scene));
     });
   }
 
   /**
-   * 跳到对应片段
+   * 跳到对应场景
    */
   go(index) {
     super.go(index);
 
     // TODO
   }
-
+  
   /**
    * 渲染
    */
-  render(parent) {
-    parent = document.querySelector(parent);
-
-    let content = this.datas.map((section) => {
-      return section.render();
+  render() {
+    // 渲染场景列表
+    let content = this.datas.map((scene) => {
+      return scene.render();
     });
     content = content.join('');
 
+    // 渲染片段
     let render = super.parse(html);
-    parent.innerHTML = render({
+    return render({
       id: this.id,
       content
     });
