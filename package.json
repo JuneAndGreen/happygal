@@ -1,8 +1,16 @@
 {
-  "name": "easyTool",
+  "name": "happygal",
   "version": "0.0.1",
-  "description": "easyTool",
+  "description": "a simple generator for gal game",
   "author": "june_01",
+  "keywords": [
+    "gal",
+    "girl and love",
+    "game",
+    "javascript",
+    "gif"
+  ],
+  "license": "MIT",
   "dependencies": {
     "babel-core": "^6.2.0",
     "babel-loader": "^6.2.0",
