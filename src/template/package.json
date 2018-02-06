@@ -1,0 +1,9 @@
+{
+  "name": "happyGal",
+  "version": "1.0.0",
+  "description": "happy gal",
+  "main": "window.js",
+  "author": "june01",
+  "dependencies": {},
+  "devDependencies": {}
+}
