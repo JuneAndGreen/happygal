@@ -39,5 +39,8 @@
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.12.6"
+  },
+  "optionalDependencies": {
+    "7zip-bin-win": "^2.2.0"
   }
 }

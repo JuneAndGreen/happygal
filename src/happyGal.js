@@ -1,14 +1,12 @@
 const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
-const os = require('os');
 
 const builder = require('electron-builder');
 
 const _ = require('./utils/utils');
 
 const cwd = process.cwd();
-const tmp = path.join(os.tmpdir(), './happyGal'); // 临时目录
 
 class HappyGal {
     constructor() {
@@ -79,7 +77,7 @@ class HappyGal {
     /**
      * 将临时目录的生成文件拷贝到目标目录
      */
-    generate(distDirPath, isInstaller) {
+    generate(distDirPath, temp, isInstaller) {
         let gameConfig = this.gameConfig;
         let ext = '';
         let prefix = '';
@@ -87,10 +85,9 @@ class HappyGal {
             ext = isInstaller ? '.dmg' : '.app';
             prefix = isInstaller ? '' : 'mac';
         } else if (process.platform === 'win32') {
-            ext = isInstaller ? '.exe' : '.exe';
-            prefix = isInstaller ? '' : 'win';
+            ext = isInstaller ? '.msi' : '.exe';
         }
-        let source = path.join(tmp, prefix, `${gameConfig.name}${ext}`);
+        let source = path.join(temp, prefix, `${gameConfig.name}${ext}`);
         let target = path.join(distDirPath, `${gameConfig.name}${ext}`);
 
         _.rmDir(target);
@@ -114,8 +111,10 @@ class HappyGal {
         let iconPath = this.transformToAbsolute(gameConfig.icon); // 游戏图标
 
         _.mkDir(distDirPath); // 保证生成目录一定存在
-        _.mkDir(tmp); // 保证临时目录一定存在
-        _.emptyDir(tmp); // 清空临时目录
+
+        let temp = path.join(distDirPath, './_happyGalTempDir');
+        _.rmDir(temp); // 如果已存在临时目录，则干掉
+        _.mkDir(temp); // 保证临时目录一定存在
 
         builder.build({
             config: {
@@ -123,13 +122,13 @@ class HappyGal {
                 productName: gameConfig.name,
                 directories: {
                     buildResources: path.join(__dirname, './temp'),
-                    output: tmp,
+                    output: temp,
                     app: path.join(__dirname, './template'),
                 },
                 win: {
                     artifactName: '${productName}.${ext}',
                     icon: iconPath,
-                    target: 'portable'
+                    target: this.needInstaller ? ['portable', 'msi'] : 'portable'
                 },
                 mac: {
                     artifactName: '${productName}.${ext}',
@@ -139,18 +138,19 @@ class HappyGal {
             }
         }).then(res => {
             try {
-                this.generate(distDirPath);
-                if (this.needInstaller) this.generate(distDirPath, true);
+                this.generate(distDirPath, temp);
+                if (this.needInstaller) this.generate(distDirPath, temp, true);
 
-                _.emptyDir(tmp);
+                _.rmDir(temp);
                 console.log(`生成完毕！生成目录：${distDirPath}`);
             } catch (err) {
-                _.emptyDir(tmp);
+                _.rmDir(temp);
                 console.error(err);
                 _.error('生成失败！');
             }
         }).catch(err => {
-            _.emptyDir(tmp);
+            _.rmDir(temp);
+            console.error(err);
             _.error('生成失败！');
         })
     }
