@@ -31,12 +31,44 @@ module.exports = {
     /**
      * 递归创建目录
      */
-    mkdir(dir) {
+    mkDir(dir) {
         try {
             fs.accessSync(dir);
         } catch (err) {
-            this.mkdir(path.dirname(dir)); // 递归上一层目录
+            this.mkDir(path.dirname(dir)); // 递归上一层目录
             fs.mkdirSync(dir);
+        }
+    },
+
+    /**
+     * 清空目录
+     */
+    emptyDir(dir) {
+        fs.readdirSync(dir).forEach(file => {
+            let filePath = path.join(dir, file);
+            let lstat = fs.lstatSync(filePath);
+
+            if (lstat.isDirectory()) {
+                // 目录
+                this.emptyDir(filePath);
+
+                fs.rmdirSync(filePath);
+            } else {
+                fs.unlinkSync(filePath);
+            }
+        });
+    },
+
+    /**
+     * 删除目录
+     */
+    rmDir(dir) {
+        try {
+            fs.accessSync(dir);
+            this.emptyDir(dir);
+            fs.rmdirSync(dir);
+        } catch (err) {
+            // ignore
         }
     }
 };
