@@ -70,5 +70,19 @@ module.exports = {
         } catch (err) {
             // ignore
         }
-    }
+    },
+
+    /**
+     * 拷贝文件
+     */
+    copyFile(file, dir, dist) {
+        let filePath = path.join(dir, file);
+
+        try {
+            fs.accessSync(filePath);
+            fs.writeFileSync(path.join(dist, file), fs.readFileSync(filePath));
+        } catch (err) {
+            // ignore
+        }
+    },
 };

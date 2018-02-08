@@ -1,16 +1,21 @@
 const path = require('path');
 const fs = require('fs');
 const vm = require('vm');
+const os = require('os');
 
 const builder = require('electron-builder');
 
 const _ = require('./utils/utils');
 
 const cwd = process.cwd();
+const appTemp = path.join(os.tmpdir(), './happyGal');
+
+_.mkDir(appTemp);
 
 class HappyGal {
     constructor() {
         this.needInstaller = false;
+        this.onlyWeb = false;
         this.gameDirPath = cwd;
         this.gameConfigFilePath = path.join(cwd, './game.config.js');
     }
@@ -20,6 +25,13 @@ class HappyGal {
      */
     setNeedInstaller(flag) {
         this.needInstaller = !!flag;
+    }
+
+    /**
+     * 只生成web版游戏
+     */
+    setOnlyWeb(flag) {
+        this.onlyWeb = !!flag;
     }
 
     /**
@@ -77,18 +89,20 @@ class HappyGal {
     /**
      * 将临时目录的生成文件拷贝到目标目录
      */
-    generate(distDirPath, temp, isInstaller) {
+    generate(distDirPath, buildTemp, isInstaller) {
         let gameConfig = this.gameConfig;
         let ext = '';
-        let prefix = '';
+        let subDir = '';
+        let suffix = '';
         if (process.platform === 'darwin') {
-            ext = isInstaller ? '.dmg' : '.app';
-            prefix = isInstaller ? '' : 'mac';
+            ext = isInstaller ? 'dmg' : 'app';
+            subDir = isInstaller ? '' : 'mac';
         } else if (process.platform === 'win32') {
-            ext = isInstaller ? '.msi' : '.exe';
+            ext = 'exe';
+            suffix = isInstaller ? '-installer' : '';
         }
-        let source = path.join(temp, prefix, `${gameConfig.name}${ext}`);
-        let target = path.join(distDirPath, `${gameConfig.name}${ext}`);
+        let source = path.join(buildTemp, subDir, `${gameConfig.name}-happyGal${suffix}.${ext}`);
+        let target = path.join(distDirPath, `${gameConfig.name}-happyGal${suffix}.${ext}`);
 
         _.rmDir(target);
 
@@ -111,48 +125,81 @@ class HappyGal {
         let iconPath = this.transformToAbsolute(gameConfig.icon); // 游戏图标
 
         _.mkDir(distDirPath); // 保证生成目录一定存在
+        _.emptyDir(appTemp); // 清空系统临时目录
 
-        let temp = path.join(distDirPath, './_happyGalTempDir');
-        _.rmDir(temp); // 如果已存在临时目录，则干掉
-        _.mkDir(temp); // 保证临时目录一定存在
+        let webTemp = path.join(distDirPath, './_happyGalWebTemp');
+        _.rmDir(webTemp); // 如果已存在临时目录，则干掉
+        _.mkDir(webTemp); // 保证web临时目录一定存在
 
-        builder.build({
-            config: {
-                appId: `com.june01.happyGal.${gameConfig.name}`,
-                productName: gameConfig.name,
-                directories: {
-                    buildResources: path.join(__dirname, './temp'),
-                    output: temp,
-                    app: path.join(__dirname, './template'),
-                },
-                win: {
-                    artifactName: '${productName}.${ext}',
-                    icon: iconPath,
-                    target: this.needInstaller ? ['portable', 'msi'] : 'portable'
-                },
-                mac: {
-                    artifactName: '${productName}.${ext}',
-                    icon: iconPath,
-                    target: this.needInstaller ? ['dir', 'dmg'] : 'dir'
+        // 初始化游戏生成环境
+        let templateDir = path.join(__dirname, './template');
+        ['package.json', 'page.html', 'window.js'].forEach(file => {
+            _.copyFile(file, templateDir, appTemp);
+        });
+
+        if (this.onlyWeb) {
+            // 只生成web版
+            
+            // TODO
+        } else {
+            let buildTemp = path.join(distDirPath, './_happyGalBuildTemp');
+            _.rmDir(buildTemp); // 如果已存在临时目录，则干掉
+            _.mkDir(buildTemp); // 保证生成临时目录一定存在
+
+            builder.build({
+                config: {
+                    appId: `com.june01.happyGal.${gameConfig.name}`,
+                    productName: gameConfig.name,
+                    directories: {
+                        output: buildTemp,
+                        app: appTemp,
+                    },
+                    win: {
+                        artifactName: '${productName}-happyGal.${ext}',
+                        icon: iconPath,
+                        target: this.needInstaller ? ['portable', 'nsis'] : 'portable'
+                    },
+                    mac: {
+                        artifactName: '${productName}-happyGal.${ext}',
+                        icon: iconPath,
+                        target: this.needInstaller ? ['dir', 'dmg'] : 'dir'
+                    },
+                    nsis: {
+                        oneClick: false,
+                        allowToChangeInstallationDirectory: true,
+                        artifactName: '${productName}-happyGal-installer.${ext}',
+                        deleteAppDataOnUninstall: true,
+                        menuCategory: 'happyGal',
+                        shortcutName: gameConfig.name
+                    }
                 }
-            }
-        }).then(res => {
-            try {
-                this.generate(distDirPath, temp);
-                if (this.needInstaller) this.generate(distDirPath, temp, true);
+            }).then(res => {
+                try {
+                    this.generate(distDirPath, buildTemp);
+                    if (this.needInstaller) this.generate(distDirPath, buildTemp, true);
 
-                _.rmDir(temp);
-                console.log(`生成完毕！生成目录：${distDirPath}`);
-            } catch (err) {
-                _.rmDir(temp);
-                console.error(err);
+                    _.emptyDir(appTemp);
+                    _.rmDir(buildTemp);
+                    _.rmDir(webTemp);
+                    
+                    console.log(`生成完毕！生成目录：${distDirPath}`);
+                } catch (err) {
+                    _.emptyDir(appTemp);
+                    _.rmDir(buildTemp);
+                    _.rmDir(webTemp);
+
+                    // console.error(err);
+                    _.error('生成失败！');
+                }
+            }).catch(err => {
+                _.emptyDir(appTemp);
+                _.rmDir(buildTemp);
+                _.rmDir(webTemp);
+
+                // console.error(err);
                 _.error('生成失败！');
-            }
-        }).catch(err => {
-            _.rmDir(temp);
-            console.error(err);
-            _.error('生成失败！');
-        })
+            })
+        }
     }
 }
 
